@@ -7,3 +7,6 @@ with open('credentials.yaml', 'r') as file:
 class RDSDatabaseConnector:
     def __init__(self, creds):
         self.creds = creds
+
+    def SQLAlchemy():
+        pass
