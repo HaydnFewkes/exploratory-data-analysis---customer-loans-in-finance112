@@ -6,7 +6,6 @@ import pandas as pd
 with open('credentials.yaml', 'r') as file:
     creds = yaml.safe_load(file)
 
-print(creds)
 
 class RDSDatabaseConnector:
     """
@@ -44,7 +43,26 @@ class RDSDatabaseConnector:
         """
         self.loan_payments.to_csv('loan_payments.csv', index=False)
 
+
+class DataTransform:
+    def __init__(self, database):
+        self.df = database
+
+    def convert_to_datetime(self, column_name):
+        self.df[column_name] = pd.to_datetime(self.df[column_name])
+
+    def convert_to_int(self):
+        self.df['term'] = self.df['term'].str.replace('months','')
+        self.df['term'] = self.df['term'].astype(float)
+        self.df.rename(columns={'term':'term_in_mnths'})
+        print(self.df.dtypes)
+
+    
 a = RDSDatabaseConnector(creds)
 a.RDSConnection()
 a.RDSExtract()
-a.RDSSaveToCSV()
+#a.RDSSaveToCSV()
+
+b = DataTransform(a.loan_payments)
+#b.convert_to_datetime('issue_date')
+b.convert_to_int()
