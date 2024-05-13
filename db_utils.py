@@ -82,7 +82,20 @@ class DataFrameInfo:
         return self.df.shape
 
     def get_null_values(self):
-        return self.df.isna().sum()
+        return ((self.df.isna().sum()/self.df.shape[0])*100)
+    
+class DataFrameTransform:
+    def __init__(self, df):
+        self.df = df
+
+    def null_values(self):
+        self.null_percent = ((self.df.isna().sum()/self.df.shape[0])*100)
+        count = -1
+        for column in self.null_percent:
+            count += 1
+            if column >= 50:
+                self.df = self.df.drop(self.df.columns[count], axis = 1)
+                count -= 1
 
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
@@ -94,6 +107,10 @@ b = DataTransform(a.loan_payments)
 b.convert_to_datetime(['issue_date','last_payment_date','next_payment_date','earliest_credit_line'])
 b.convert_to_int()
 
-c = DataFrameInfo(b.df)
-print(c.get_null_values())
+#c = DataFrameInfo(b.df)
+#print(c.get_null_values())
+#print(c.get_shape())
+
+d = DataFrameTransform(b.df)
+print(d.null_values())
 #USE IPYNB!!!!!
