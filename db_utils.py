@@ -1,6 +1,8 @@
 import yaml
 from sqlalchemy import create_engine, inspect
 import pandas as pd
+import missingno as msno
+import matplotlib.pyplot as plt
 
 # Opens the database credentails, and saves them
 def GetCreds():
@@ -87,15 +89,33 @@ class DataFrameInfo:
 class DataFrameTransform:
     def __init__(self, df):
         self.df = df
+        self.null_percent = ((self.df.isna().sum()/self.df.shape[0])*100)
 
     def null_values(self):
-        self.null_percent = ((self.df.isna().sum()/self.df.shape[0])*100)
         count = -1
         for column in self.null_percent:
             count += 1
             if column >= 50:
                 self.df = self.df.drop(self.df.columns[count], axis = 1)
                 count -= 1
+    
+    def data_impute(self, column_names, data_type):
+        if data_type == 'mean':
+            for column in column_names:
+                self.df[column] = self.df[column].fillna(self.df[column].mean(skipna=True))
+            self.null_percent = ((self.df.isna().sum()/self.df.shape[0])*100)
+        if data_type == 'mode':
+            for column in column_names:
+                self.df[column] = self.df[column].fillna(self.df[column].mode()[0])
+            self.null_percent = ((self.df.isna().sum()/self.df.shape[0])*100)
+        
+class Plotter:
+    def __init__(self, df):
+        self.df = df
+
+    def plot_frame(self):
+        msno.matrix(self.df)
+        plt.show()
 
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
@@ -112,5 +132,15 @@ b.convert_to_int()
 #print(c.get_shape())
 
 d = DataFrameTransform(b.df)
-print(d.null_values())
+d.null_values()
+e = Plotter(d.df)
+e.plot_frame()
+d.data_impute(['funded_amount','term', 'int_rate','collections_12_mths_ex_med'], 'mean')
+e.plot_frame()
+d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'], 'mode')
+e.plot_frame()
+#print(d.null_percent)
+
+#e = Plotter(d.df)
+#e.plot_frame()
 #USE IPYNB!!!!!
