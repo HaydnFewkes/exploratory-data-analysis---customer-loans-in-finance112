@@ -117,6 +117,10 @@ class Plotter:
         msno.matrix(self.df)
         plt.show()
 
+    def skewness(self):
+        self.skew = self.df.skew()
+        print(self.skew)
+
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
 a.RDSConnection()
@@ -134,13 +138,11 @@ b.convert_to_int()
 d = DataFrameTransform(b.df)
 d.null_values()
 e = Plotter(d.df)
-e.plot_frame()
-d.data_impute(['funded_amount','term', 'int_rate','collections_12_mths_ex_med'], 'mean')
-e.plot_frame()
-d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'], 'mode')
-e.plot_frame()
-#print(d.null_percent)
-
-#e = Plotter(d.df)
 #e.plot_frame()
+d.data_impute(['funded_amount','term', 'int_rate','collections_12_mths_ex_med'], 'mean')
+#e.plot_frame()
+d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'], 'mode')
+e.skewness()
+#e.plot_frame()
+#print(d.null_percent)
 #USE IPYNB!!!!!
