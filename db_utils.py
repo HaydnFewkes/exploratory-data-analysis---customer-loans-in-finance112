@@ -3,6 +3,8 @@ from sqlalchemy import create_engine, inspect
 import pandas as pd
 import missingno as msno
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.preprocessing import PowerTransformer
 
 # Opens the database credentails, and saves them
 def GetCreds():
@@ -90,6 +92,9 @@ class DataFrameTransform:
     def __init__(self, df):
         self.df = df
         self.null_percent = ((self.df.isna().sum()/self.df.shape[0])*100)
+        self.skew = self.df.skew(numeric_only=True)
+        self.numerical_cols = 0
+        self.newdf = self.df
 
     def null_values(self):
         count = -1
@@ -109,6 +114,16 @@ class DataFrameTransform:
                 self.df[column] = self.df[column].fillna(self.df[column].mode()[0])
             self.null_percent = ((self.df.isna().sum()/self.df.shape[0])*100)
         
+    def correct_skew(self):
+        self.numerical_cols = self.df.select_dtypes(include=['number'])
+        self.skew = self.df.skew(numeric_only=True)
+        pt = PowerTransformer()
+        for column in self.numerical_cols:
+            if self.skew[column] >= 1:
+                temp_df = self.numerical_cols[column].to_frame()
+                pt.fit(temp_df)
+                self.newdf[column] = pt.transform(temp_df)
+
 class Plotter:
     def __init__(self, df):
         self.df = df
@@ -118,8 +133,10 @@ class Plotter:
         plt.show()
 
     def skewness(self):
-        self.skew = self.df.skew()
-        print(self.skew)
+        self.skew = self.df.skew(numeric_only=True)
+        #print(self.skew)
+        plt.plot(self.skew)
+        plt.show()
 
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
@@ -143,6 +160,9 @@ d.data_impute(['funded_amount','term', 'int_rate','collections_12_mths_ex_med'],
 #e.plot_frame()
 d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'], 'mode')
 e.skewness()
+d.correct_skew()
+f = Plotter(d.newdf)
+f.skewness()
 #e.plot_frame()
 #print(d.null_percent)
 #USE IPYNB!!!!!
