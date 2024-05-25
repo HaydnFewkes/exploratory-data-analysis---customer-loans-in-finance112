@@ -62,6 +62,11 @@ class DataTransform:
         self.df['term'] = self.df['term'].str.replace('months','')
         self.df['term'] = self.df['term'].astype(float)
         self.df.rename(columns={'term':'term_in_mnths'})
+    
+    def convert_int_to_flt(self):
+        numerical_cols = self.df.select_dtypes(int)
+        for column in numerical_cols:
+            self.df[column] = self.df[column].astype(float)
 
 class DataFrameInfo:
     def __init__(self, database):
@@ -124,11 +129,23 @@ class DataFrameTransform:
                 pt.fit(temp_df)
                 self.newdf[column] = pt.transform(temp_df)
 
+    def remove_outliners(self):
+        self.numerical_cols = self.newdf.select_dtypes(include=['number'])
+        for column in self.numerical_cols:
+            IQR = self.newdf[column].quantile(0.75) - self.newdf[column].quantile(0.25)
+            higher_outlier = self.newdf[column].quantile(0.75) + (IQR * 1.5)
+            lower_outlier = self.newdf[column].quantile(0.25) - (IQR * 1.5)
+            self.newdf.loc[self.newdf[column] > higher_outlier, column] = higher_outlier
+            self.newdf.loc[self.newdf[column] < lower_outlier, column] = lower_outlier
 class Plotter:
     def __init__(self, df):
         self.df = df
 
     def plot_frame(self):
+        self.df.plot()
+        plt.show()
+
+    def plot_frame_missing_values(self):
         msno.matrix(self.df)
         plt.show()
 
@@ -147,6 +164,7 @@ a.RDSExtract()
 b = DataTransform(a.loan_payments)
 b.convert_to_datetime(['issue_date','last_payment_date','next_payment_date','earliest_credit_line'])
 b.convert_to_int()
+b.convert_int_to_flt()
 
 #c = DataFrameInfo(b.df)
 #print(c.get_null_values())
@@ -159,10 +177,12 @@ e = Plotter(d.df)
 d.data_impute(['funded_amount','term', 'int_rate','collections_12_mths_ex_med'], 'mean')
 #e.plot_frame()
 d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'], 'mode')
-e.skewness()
+#e.skewness()
 d.correct_skew()
 f = Plotter(d.newdf)
-f.skewness()
+d.remove_outliners()
+#f.skewness()
+f.plot_frame()
 #e.plot_frame()
 #print(d.null_percent)
 #USE IPYNB!!!!!
