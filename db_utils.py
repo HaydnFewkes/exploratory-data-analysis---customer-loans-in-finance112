@@ -220,6 +220,27 @@ class Plotter:
                     square=True, linewidths=.5, cbar_kws={"shrink": .5})
         plt.show()
 
+    def state_of_loans(self):
+        loan_percent = (self.df['total_rec_prncp']/self.df['loan_amount'])*100
+        sns.relplot(loan_percent)
+        plt.show()
+
+    def six_months(self):
+        counter = 0
+        six_month_percent = []
+        for value in self.df['instalment']:
+            if ((value*6)+self.df['total_rec_prncp'].iloc[counter]) > self.df['loan_amount'].iloc[counter]:
+                six_month_percent.append(self.df['loan_amount'].iloc[counter])
+            else:
+                six_month_percent.append((value*6)+self.df['total_rec_prncp'].iloc[counter])
+            counter += 1
+        six_month_percent = pd.Series(six_month_percent)
+        loan_percent = (six_month_percent/self.df['loan_amount'])*100
+        sns.relplot(loan_percent)
+        plt.show()
+        
+    
+
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
 a.RDSConnection()
@@ -245,7 +266,9 @@ d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'
 #e.skewness()
 d.correct_skew()
 f = Plotter(d.newdf)
-d.correlation()
+#d.correlation()
+#e.state_of_loans()
+e.six_months()
 #f.skewness()
 #f.corr_matrix()
 #e.plot_frame()
