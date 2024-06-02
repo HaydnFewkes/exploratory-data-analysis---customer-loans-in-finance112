@@ -67,11 +67,10 @@ class DataTransform:
 
     def convert_to_int(self):
         """
-        Converts any string columns that better fit the integer datatype into said datatype
+        Converts any string columns that better fit the float datatype into said datatype
         """
         self.df['term'] = self.df['term'].str.replace('months','')
         self.df['term'] = self.df['term'].astype(float)
-        self.df.rename(columns={'term':'term_in_mnths'})
 
 class DataFrameInfo:
     """
@@ -214,6 +213,10 @@ class Plotter:
         sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3, center=0,
                     square=True, linewidths=.5, cbar_kws={"shrink": .5})
         plt.show()
+        
+class DataAnalysis:
+    def __init__(self, df):
+        self.df = df
 
     def state_of_loans(self):
         loan_percent = (self.df['total_rec_prncp']/self.df['loan_amount'])*100
@@ -233,8 +236,28 @@ class Plotter:
         loan_percent = (six_month_percent/self.df['loan_amount'])*100
         sns.relplot(loan_percent)
         plt.show()
-        
     
+    def loan_loss(self):
+        counter = 0
+        charged_off_counter = 0
+        loan_total = 0
+        paid_total = 0
+        mnths_paid = 0
+        months_left = 0
+        total_loss = 0
+        for value in self.df['loan_status']:
+            if value == 'Charged Off':
+                charged_off_counter += 1
+                loan_total += self.df['loan_amount'].iloc[counter]
+                paid_total += self.df['total_rec_prncp'].iloc[counter]
+                mnths_paid = round(self.df['total_payment'].iloc[counter]/self.df['instalment'].iloc[counter])
+                mnths_left = self.df['term'].iloc[counter]-mnths_paid
+                total_loss += mnths_left*self.df['instalment'].iloc[counter]
+            counter += 1
+        percent_charged_off = (charged_off_counter/len(self.df['loan_status']))*100
+        print('The percent that has been charged off is '+str(round(percent_charged_off,2))+'%'+
+              ', and the amount paid back is '+str(round(paid_total,2))+' out of '+str(round(loan_total,2)))
+        print('The amount that the company lost due to these charged off loans is, '+str(round(total_loss,2)))
 
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
@@ -260,9 +283,10 @@ d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'
 #e.skewness()
 d.correct_skew()
 f = Plotter(d.newdf)
+g = DataAnalysis(d.df)
 #d.correlation()
+g.loan_loss()
 #e.state_of_loans()
-e.six_months()
 #f.skewness()
 #f.corr_matrix()
 #e.plot_frame()
