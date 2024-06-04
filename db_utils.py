@@ -268,6 +268,31 @@ class DataAnalysis:
               ', and the amount paid back is '+str(round(paid_total,2))+' out of '+str(round(loan_total,2)))
         print('The amount that the company lost due to these charged off loans is, '+str(round(total_loss,2)))
 
+    def possible_loss(self):
+        late_count = 0
+        counter = 0
+        total_loss = 0
+        proj_loss = 0
+        exp_rev = 0
+        for value in self.df['loan_status']:
+            if 'Late' in value:
+                late_count += 1
+                proj_loss += self.df['out_prncp'].iloc[counter]
+            elif value == 'Charged Off':
+                total_loss += (self.df['loan_amount'].iloc[counter]- self.df['total_payment'].iloc[counter])
+            counter += 1
+        counter = 0
+        for value in self.df['instalment']:
+            exp_rev += self.df['term'].iloc[counter]*value
+            counter += 1
+        late_percent = late_count/len(self.df['loan_status'])*100
+        total_loss += proj_loss
+        percent_loss = (total_loss/exp_rev)*100
+        print('The percentage of users that have a late payment is '+str(round(late_percent,2))+
+        '%, the projected loss if said customers were to not finish their payment is '+str(round(proj_loss,2))+
+        ' and the percent of loss for all late loans if they were charged off, as well as all currently charged off loans is '
+        +str(round(percent_loss,2))+'%')
+
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
 a.RDSConnection()
@@ -295,7 +320,8 @@ d.correct_skew()
 f = Plotter(d.newdf)
 g = DataAnalysis(d.df)
 #d.correlation()
-g.loan_loss()
+#g.loan_loss()
+g.possible_loss()
 #e.state_of_loans()
 #f.skewness()
 #f.corr_matrix()
