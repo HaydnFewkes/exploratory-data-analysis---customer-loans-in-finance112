@@ -71,15 +71,10 @@ class DataTransform:
         """
         self.df['term'] = self.df['term'].str.replace('months','')
         self.df['term'] = self.df['term'].astype(float)
-<<<<<<< HEAD
-        self.df.rename(columns={'term':'term_in_mnths'})
-    
+
     def convert_int_to_flt(self):
-        numerical_cols = self.df.select_dtypes(int)
-        for column in numerical_cols:
-            self.df[column] = self.df[column].astype(float)
-=======
->>>>>>> WorkBranch
+        for column in self.df.select_dtypes(int):
+            self.df[column] = self.df[column].astype('float')
 
 class DataFrameInfo:
     """
@@ -293,6 +288,101 @@ class DataAnalysis:
         ' and the percent of loss for all late loans if they were charged off, as well as all currently charged off loans is '
         +str(round(percent_loss,2))+'%')
 
+    def indicator_of_loss(self):
+        counter = 0
+        grade_count_loss = {
+            'A':0,
+            'B':0,
+            'C':0,
+            'D':0,
+            'E':0,
+            'F':0,
+            'G':0
+        }
+        grade_count = {
+            'A':0,
+            'B':0,
+            'C':0,
+            'D':0,
+            'E':0,
+            'F':0,
+            'G':0
+        }
+        for value in self.df['grade']:
+            grade_count[value] += 1
+            if self.df['loan_status'].iloc[counter] == 'Charged Off' or 'Late' in self.df['loan_status'].iloc[counter]:
+                grade_count_loss[value] += 1
+            counter += 1
+        grade_percent = {key: round((grade_count_loss[key] / grade_count.get(key, 0))*100,2)
+                        for key in grade_count_loss.keys()}
+        counter = 0
+        purpose_count = {
+            'credit_card':0,
+            'debt_consolidation':0,
+            'home_improvement':0,
+            'small_business':0,
+            'renewable_energy':0,
+            'major_purchase':0,
+            'other':0,
+            'moving':0,
+            'car':0,
+            'medical':0,
+            'house':0,
+            'vacation':0,
+            'wedding':0,
+            'educational':0
+        }
+        purpose_count_loss = {
+            'credit_card':0,
+            'debt_consolidation':0,
+            'home_improvement':0,
+            'small_business':0,
+            'renewable_energy':0,
+            'major_purchase':0,
+            'other':0,
+            'moving':0,
+            'car':0,
+            'medical':0,
+            'house':0,
+            'vacation':0,
+            'wedding':0,
+            'educational':0
+        }
+        for value in self.df['purpose']:
+            purpose_count[value] += 1
+            if self.df['loan_status'].iloc[counter] == 'Charged Off' or 'Late' in self.df['loan_status'].iloc[counter]:
+                purpose_count_loss[value] += 1
+            counter += 1
+        purpose_percent = {key: round((purpose_count_loss[key] / purpose_count.get(key, 0))*100,2)
+                        for key in purpose_count_loss.keys()}
+        counter = 0
+        home_count = {
+            'MORTGAGE':0,
+            'RENT':0,
+            'OWN':0,
+            'OTHER':0,
+            'NONE':0
+        }
+        home_count_loss = {
+            'MORTGAGE':0,
+            'RENT':0,
+            'OWN':0,
+            'OTHER':0,
+            'NONE':0
+        }
+        for value in self.df['home_ownership']:
+            home_count[value] += 1
+            if self.df['loan_status'].iloc[counter] == 'Charged Off' or 'Late' in self.df['loan_status'].iloc[counter]:
+                home_count_loss[value] += 1
+            counter += 1
+        home_percent = {key: round((home_count_loss[key] / home_count.get(key, 0))*100,2)
+                        for key in home_count_loss.keys()}
+        print('We can see that the lower the grade level of a loan is more likely to affect if the '+
+              'loan is charged off or late ',grade_percent,'.')
+        print('The purpose of the loan seems to not have too big of an impact on the likelihood of '+
+               'the loan being a loss ',purpose_percent,', execpt if the purpose is small business.')
+        print('The home ownership has so imapct on the chance of the loan being '+
+               'charged off or late',home_percent)
 creds = GetCreds()
 a = RDSDatabaseConnector(creds)
 a.RDSConnection()
@@ -321,7 +411,8 @@ f = Plotter(d.newdf)
 g = DataAnalysis(d.df)
 #d.correlation()
 #g.loan_loss()
-g.possible_loss()
+#g.possible_loss()
+g.indicator_of_loss()
 #e.state_of_loans()
 #f.skewness()
 #f.corr_matrix()
