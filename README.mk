@@ -6,3 +6,7 @@ The project currently:
 - Removes null and outlier values/replaces said values
 - Plots the data visually
 - Corrects skew and over correlation
+- Represents current state of Loans
+- Represents what loans could look like in six months
+- Calculates total loss from late or charged off loans
+- Looks at columns to see if specific ones affect the chance of a loan getting charged off or being late

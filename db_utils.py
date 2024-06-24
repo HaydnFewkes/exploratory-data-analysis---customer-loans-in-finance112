@@ -7,8 +7,10 @@ import numpy as np
 from sklearn.preprocessing import PowerTransformer
 import seaborn as sns
 
-# Opens the database credentails, and saves them
 def GetCreds():
+    """
+    Opens the credentials for the database
+    """
     with open('credentials.yaml', 'r') as file:
         creds = yaml.safe_load(file)
         return creds
@@ -62,6 +64,8 @@ class DataTransform:
         """
         Converts all string dates into datetime format
         """
+        # Recommned values:
+        # ['issue_date','last_payment_date','next_payment_date','earliest_credit_line']
         for column in column_names:
             self.df[column] = pd.to_datetime(self.df[column])
 
@@ -73,6 +77,9 @@ class DataTransform:
         self.df['term'] = self.df['term'].astype(float)
 
     def convert_int_to_flt(self):
+        """
+        Converts all integers into floats, due to floats being easier to use in calculations
+        """
         for column in self.df.select_dtypes(int):
             self.df[column] = self.df[column].astype('float')
 
@@ -152,6 +159,9 @@ class DataFrameTransform:
         Replaces all null values with either the mean or mode,
         which ever is more suited
         """
+        #Recommended values to use:
+        # (['funded_amount','term', 'int_rate','collections_12_mths_ex_med'], 'mean')
+        # (['employment_length', 'last_payment_date', 'last_credit_pull_date'], 'mode')
         if data_type == 'mean':
             for column in column_names:
                 self.df[column] = self.df[column].fillna(self.df[column].mean(skipna=True))
@@ -219,15 +229,24 @@ class Plotter:
         plt.show()
         
 class DataAnalysis:
+    """
+    Class for completing data analysis on the database
+    """
     def __init__(self, df):
         self.df = df
 
     def state_of_loans(self):
+        """
+        Plots the total amount of loans that are currently paid off
+        """
         loan_percent = (self.df['total_rec_prncp']/self.df['loan_amount'])*100
         sns.relplot(loan_percent)
         plt.show()
 
     def six_months(self):
+        """
+        Function to find the expected paid off amount in six months time
+        """
         counter = 0
         six_month_percent = []
         for value in self.df['instalment']:
@@ -242,12 +261,14 @@ class DataAnalysis:
         plt.show()
     
     def loan_loss(self):
+        """
+        Function to find the percent of loans that are paid off and the total loss from charged off loans
+        """
         counter = 0
         charged_off_counter = 0
         loan_total = 0
         paid_total = 0
         mnths_paid = 0
-        months_left = 0
         total_loss = 0
         for value in self.df['loan_status']:
             if value == 'Charged Off':
@@ -264,6 +285,9 @@ class DataAnalysis:
         print('The amount that the company lost due to these charged off loans is, '+str(round(total_loss,2)))
 
     def possible_loss(self):
+        """
+        Function to find the possible loss if late loans were to be charged off
+        """
         late_count = 0
         counter = 0
         total_loss = 0
@@ -289,7 +313,11 @@ class DataAnalysis:
         +str(round(percent_loss,2))+'%')
 
     def indicator_of_loss(self):
+        """
+        Function that focusses on columns that are most likely to affect the chance of a loan being charged off
+        """
         counter = 0
+        # Focus on the grade column
         grade_count_loss = {
             'A':0,
             'B':0,
@@ -316,6 +344,7 @@ class DataAnalysis:
         grade_percent = {key: round((grade_count_loss[key] / grade_count.get(key, 0))*100,2)
                         for key in grade_count_loss.keys()}
         counter = 0
+        # Focus on the purpose column
         purpose_count = {
             'credit_card':0,
             'debt_consolidation':0,
@@ -356,6 +385,7 @@ class DataAnalysis:
         purpose_percent = {key: round((purpose_count_loss[key] / purpose_count.get(key, 0))*100,2)
                         for key in purpose_count_loss.keys()}
         counter = 0
+        # Focus on the home_ownership column
         home_count = {
             'MORTGAGE':0,
             'RENT':0,
@@ -376,46 +406,11 @@ class DataAnalysis:
                 home_count_loss[value] += 1
             counter += 1
         home_percent = {key: round((home_count_loss[key] / home_count.get(key, 0))*100,2)
-                        for key in home_count_loss.keys()}
+                        for key in home_count_loss.keys()}#
+        # Final result
         print('We can see that the lower the grade level of a loan is more likely to affect if the '+
               'loan is charged off or late ',grade_percent,'.')
         print('The purpose of the loan seems to not have too big of an impact on the likelihood of '+
                'the loan being a loss ',purpose_percent,', execpt if the purpose is small business.')
         print('The home ownership has so imapct on the chance of the loan being '+
                'charged off or late',home_percent)
-creds = GetCreds()
-a = RDSDatabaseConnector(creds)
-a.RDSConnection()
-a.RDSExtract()
-#a.RDSSaveToCSV()
-
-b = DataTransform(a.loan_payments)
-b.convert_to_datetime(['issue_date','last_payment_date','next_payment_date','earliest_credit_line'])
-b.convert_to_int()
-b.convert_int_to_flt()
-
-#c = DataFrameInfo(b.df)
-#print(c.get_null_values())
-#print(c.get_shape())
-
-d = DataFrameTransform(b.df)
-d.null_values()
-e = Plotter(d.df)
-#e.plot_frame()
-d.data_impute(['funded_amount','term', 'int_rate','collections_12_mths_ex_med'], 'mean')
-#e.plot_frame()
-d.data_impute(['employment_length', 'last_payment_date', 'last_credit_pull_date'], 'mode')
-#e.skewness()
-d.correct_skew()
-f = Plotter(d.newdf)
-g = DataAnalysis(d.df)
-#d.correlation()
-#g.loan_loss()
-#g.possible_loss()
-g.indicator_of_loss()
-#e.state_of_loans()
-#f.skewness()
-#f.corr_matrix()
-#e.plot_frame()
-#print(d.null_percent)
-#USE IPYNB!!!!!
