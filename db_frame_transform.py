@@ -55,7 +55,6 @@ class DataFrameTransform:
     def correlation(self):
         """
         Removes the overly correlated columns
-        In this case we only has one column that was an issue
         """
-        self.newdf = self.newdf.drop(columns=['delinq_2yrs'])
-        print(self.newdf.columns.tolist())
+        self.newdf = self.newdf.drop(columns=['member_id','total_payment_inv','funded_amount_inv','funded_amount'
+                                              ,'out_prncp_inv','instalment','recoveries','total_rec_prncp'])
