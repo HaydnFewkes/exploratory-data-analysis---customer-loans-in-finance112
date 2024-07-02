@@ -15,7 +15,7 @@ class DataTransform:
         # Recommned values:
         # ['issue_date','last_payment_date','next_payment_date','earliest_credit_line']
         for column in column_names:
-            self.df[column] = pd.to_datetime(self.df[column])
+            self.df[column] = pd.to_datetime(self.df[column],format="mixed", dayfirst=True)
 
     def convert_to_int(self):
         """
