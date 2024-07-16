@@ -13,8 +13,8 @@ class DataAnalysis:
         """
         Plots the total amount of loans that are currently paid off
         """
-        loan_percent = (self.df['total_rec_prncp']/self.df['loan_amount'])*100
-        sns.relplot(loan_percent)
+        loan = sum(self.df['total_rec_prncp'])/sum(self.df['loan_amount'])*100
+        plt.pie([loan,100-loan], labels=['Paid Off', 'Not Paid Off'],autopct='%1.1f%%')
         plt.show()
 
     def six_months(self):
@@ -30,8 +30,8 @@ class DataAnalysis:
                 six_month_percent.append((value*6)+self.df['total_rec_prncp'].iloc[counter])
             counter += 1
         six_month_percent = pd.Series(six_month_percent)
-        loan_percent = (six_month_percent/self.df['loan_amount'])*100
-        sns.relplot(loan_percent)
+        loan_percent = (sum(six_month_percent)/sum(self.df['loan_amount']))*100
+        plt.pie([loan_percent,100-loan_percent], labels=['Paid Off', 'Not Paid Off'],autopct='%1.1f%%')
         plt.show()
     
     def loan_loss(self):

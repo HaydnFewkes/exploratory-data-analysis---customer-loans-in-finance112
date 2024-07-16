@@ -24,9 +24,16 @@ class Plotter:
         """
         Plots the skewness
         """
-        self.skew = self.df.skew(numeric_only=True)
-        plt.plot(self.skew)
-        plt.show()
+        self.numerical_cols = self.df[['loan_amount','funded_amount','funded_amount_inv','int_rate','instalment','dti','open_accounts','total_accounts','out_prncp','out_prncp_inv','total_payment','total_payment_inv','total_rec_prncp','total_rec_int','last_payment_amount']]
+        for column in self.numerical_cols.columns:
+            plt.title(str(column))
+            plt.hist(self.df[column])
+            plt.show()
+        #self.numerical_cols = self.df.select_dtypes(include=['number'])
+        #for column in self.numerical_cols:
+        #    self.skew = column.skew()
+        #    print(self.skew)
+        
 
     def corr_matrix(self):
         """
